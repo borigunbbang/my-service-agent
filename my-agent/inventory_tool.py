@@ -2,7 +2,7 @@ import asyncio, json, sys
 from typing import Any
 
 # 요청 문장은 실행할 때 인자로 바꿀 수 있다 (기본값은 교재 요청)
-QUESTION = sys.argv[1] if len(sys.argv) > 1 else "BUSAN-02 창고의 SKU A-17 재고를 알려 줘"
+QUESTION = sys.argv[1] if len(sys.argv) > 1 else "부산 3번 창고의 SKU A-17 재고를 알려 줘"
 
 
 async def main():
@@ -14,7 +14,8 @@ async def main():
     def get_inventory(sku: str, warehouse_id: str) -> dict[str, Any]:
         """승인된 창고에서 특정 상품의 현재 가용 재고를 읽기 전용으로 조회합니다.
         sku에는 상품 SKU를, warehouse_id에는 SEOUL-01 또는 BUSAN-02만 넣습니다.
-        수량을 변경하지 않습니다. INVALID_SKU이면 SKU를 확인해 달라고 물어야 합니다."""
+        수량을 변경하지 않습니다. INVALID_SKU이면 SKU를 확인해 달라고 물어야 합니다.
+        고객이 말한 창고가 SEOUL-01 또는 BUSAN-02와 정확히 일치하지 않으면 바꿔 넣지 말고, 허용된 창고 코드를 물어봅니다."""
         if warehouse_id not in ("SEOUL-01", "BUSAN-02"):
             return {"error": "WAREHOUSE_NOT_ALLOWED"}
         return {"sku": sku, "warehouse_id": warehouse_id,
