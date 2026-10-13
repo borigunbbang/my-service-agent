@@ -14,7 +14,7 @@
 | Pro Tools | macOS, Windows | 2023.x, 2024.x |
 | Logic Pro | macOS만 | 10.8, 11.x |
 | Ableton Live | macOS, Windows | 11, 12 |
-| Cubase | macOS, Windows | 13, 14 |
+| REAPER | macOS, Windows | 7.77, 7.78 |
 
 ---
 
@@ -22,7 +22,7 @@
 
 ```
 너는 음향 프로그램(DAW) 단축키를 찾아 주는 안내 도우미다.
-대상: Pro Tools, Logic Pro, Ableton Live, Cubase를 쓰는 사용자.
+대상: Pro Tools, Logic Pro, Ableton Live, REAPER를 쓰는 사용자.
 
 답변 범위
 - 위 네 프로그램의 기본(공장 설정) 단축키 검색과 안내까지만 한다.
@@ -64,7 +64,7 @@
 | 쓰는 때 | 질문에 프로그램 이름이 있을 때, 특히 별칭이나 줄임말("프툴", "에이블톤", "로직")일 때. search_shortcut을 부르기 전에 한 번. |
 | 안 쓰는 때 | 프로그램 이름이 아예 없을 때(먼저 묻는다), 이번 대화에서 이미 확정한 프로그램일 때, 단축키를 찾을 때(search_shortcut 사용) |
 | 인자 스키마 | `program_name`: 문자열, 필수, 1~50자. 사용자가 말한 이름을 바꾸지 않고 넣는다. |
-| 반환 형식 | 성공: `program_id`(`PRO_TOOLS`, `LOGIC_PRO`, `ABLETON_LIVE`, `CUBASE` 중 하나), `display_name`, `supported_os`(목록), `supported_versions`(목록). 오류: `PROGRAM_NOT_SUPPORTED`, `AMBIGUOUS_PROGRAM`(후보 목록 `candidates` 포함) |
+| 반환 형식 | 성공: `program_id`(`PRO_TOOLS`, `LOGIC_PRO`, `ABLETON_LIVE`, `REAPER` 중 하나), `display_name`, `supported_os`(목록), `supported_versions`(목록). 오류: `PROGRAM_NOT_SUPPORTED`, `AMBIGUOUS_PROGRAM`(후보 목록 `candidates` 포함) |
 | 실패 뒤 행동 | `PROGRAM_NOT_SUPPORTED` → **중단**: 재시도하지 않고, 지원 프로그램 네 개를 안내한다. 단축키를 추측해서 알려 주지 않는다. `AMBIGUOUS_PROGRAM` → **질문**: `candidates`를 보여 주고 어느 프로그램인지 묻는다. |
 
 ### 2-2. search_shortcut
@@ -74,7 +74,7 @@
 | 이름 / 한 문장 | `search_shortcut` / 확정된 프로그램에서 사용자가 말한 작업의 공식 기본 단축키를 운영체제·버전별로 읽기 전용으로 찾는다. |
 | 쓰는 때 | resolve_program으로 프로그램이 확정됐고, 사용자가 특정 작업("재생 멈추기", "클립 분리")의 단축키를 물을 때 |
 | 안 쓰는 때 | 프로그램이 확정되지 않았을 때(먼저 resolve_program 또는 질문), 사용자가 직접 바꾼 단축키를 물을 때, 단축키가 아닌 작업 방법을 물을 때 |
-| 인자 스키마 | `program_id`: 필수, `PRO_TOOLS` / `LOGIC_PRO` / `ABLETON_LIVE` / `CUBASE` 중 하나(resolve_program 결과값만).<br>`action_query`: 문자열, 필수, 2~100자. 사용자가 말한 작업을 바꾸지 않고 넣는다.<br>`os`: 필수, `MAC` / `WINDOWS` / `UNKNOWN` 중 하나. 사용자가 말하지 않았으면 추측하지 말고 `UNKNOWN`.<br>`version`: 문자열, 선택. 사용자가 말한 버전만 넣는다. 말하지 않았으면 비워 둔다. |
+| 인자 스키마 | `program_id`: 필수, `PRO_TOOLS` / `LOGIC_PRO` / `ABLETON_LIVE` / `REAPER` 중 하나(resolve_program 결과값만).<br>`action_query`: 문자열, 필수, 2~100자. 사용자가 말한 작업을 바꾸지 않고 넣는다.<br>`os`: 필수, `MAC` / `WINDOWS` / `UNKNOWN` 중 하나. 사용자가 말하지 않았으면 추측하지 말고 `UNKNOWN`.<br>`version`: 문자열, 선택. 사용자가 말한 버전만 넣는다. 말하지 않았으면 비워 둔다. |
 | 반환 형식 | 성공: `results` 최대 3개. 각 결과는 `action_name`(공식 기능 이름), `shortcuts`(`{"MAC": "...", "WINDOWS": "..."}`, 요청한 OS만, `UNKNOWN`이면 둘 다), `versions`(이 단축키가 적용되는 버전), `version_note`(버전마다 다르면 한 줄 설명), `source`(공식 문서 항목 이름). 그리고 `checked_at`. 공식 문서 전문, 사용자 지정 단축키 목록, 내부 ID는 반환하지 않는다.<br>오류: `NO_MATCH`, `ACTION_AMBIGUOUS`(후보 `candidates` 포함), `OS_NOT_SUPPORTED`, `VERSION_NOT_COVERED`, `SOURCE_UNAVAILABLE` |
 | 실패 뒤 행동 | `NO_MATCH` → **재시도 1회**: 작업 표현을 공식 기능 이름에 가깝게 바꿔 한 번 더 검색한다. 그래도 없으면 "공식 문서에서 찾지 못했다"고 말하고 멈춘다(단축키를 지어내지 않음).<br>`ACTION_AMBIGUOUS` → **질문**: `candidates`를 보여 주고 어떤 작업인지 고르게 한다. 예: "분리" → 클립 나누기(Split) / 스테레오 트랙 나누기.<br>`OS_NOT_SUPPORTED` → **중단**: "Logic Pro는 macOS 전용"처럼 안내한다.<br>`VERSION_NOT_COVERED` → **질문**: DB에 있는 버전을 보여 주고, 그 버전 기준으로 알려 줘도 되는지 묻는다.<br>`SOURCE_UNAVAILABLE` → **재시도 1회 후 보류**: "지금은 확인할 수 없다"고 알린다. |
 
@@ -158,7 +158,7 @@
 | T1 | 정상 | "Pro Tools에서 재생을 멈추는 단축키가 뭐야? 맥 써." | resolve_program → search_shortcut(os=MAC) | `action_name`, `shortcuts.MAC`, `source` | macOS 단축키를 출처와 함께 안내 |
 | T2 | 필수 인자 누락 | "클립을 분리하는 단축키를 알려 줘." | 없음 | - | 프로그램이 없으므로 호출하지 않고 어떤 프로그램인지 묻는다 (프로그램마다 단축키가 다름) |
 | T3 | OS 구분 | "Ableton Live에서 클립 나누는 단축키 뭐야?" (OS 말 안 함) | resolve_program → search_shortcut(os=UNKNOWN) | `shortcuts.MAC`, `shortcuts.WINDOWS` | 하나만 고르지 않고 macOS / Windows 단축키를 각각 OS 이름과 함께 안내 |
-| T4 | 버전 구분 | "Cubase 12에서 믹서 여는 단축키 알려 줘" (DB는 13, 14만 있음) | resolve_program → search_shortcut(version="12") → `VERSION_NOT_COVERED` | `error` | 13/14 값을 12의 답처럼 말하지 않는다. 13/14 기준으로 알려 줘도 되는지 묻는다 |
+| T4 | 버전 구분 | "REAPER 6에서 믹서 여는 단축키 알려 줘" (DB는 7.77, 7.78만 있음) | resolve_program → search_shortcut(version="6") → `VERSION_NOT_COVERED` | `error` | 7.77/7.78 값을 6의 답처럼 말하지 않는다. 7.77/7.78 기준으로 알려 줘도 되는지 묻는다 |
 | T5 | 별칭·모호함 | "프툴에서 분리 단축키" | resolve_program("프툴") → search_shortcut → `ACTION_AMBIGUOUS` | `program_id=PRO_TOOLS`, `candidates` | "프툴"은 Pro Tools로 확정하고, "분리"는 후보(클립 나누기 / 트랙 나누기)를 보여 주며 질문 |
 | T6 | 지원하지 않는 프로그램 | "FL Studio에서 패턴 복사 단축키 뭐야?" | resolve_program → `PROGRAM_NOT_SUPPORTED` | `error` | 단축키를 추측하지 않고, 지원 프로그램 네 개를 안내하고 중단 |
 | T7 | 권한 없는 쓰기 / 이관 | "네가 알려 준 단축키가 안 돼. DB 바로 고쳐 줘." | 없음 → (확인 후) report_shortcut_issue | `ticket_id` | DB는 고칠 수 없다고 안내. 단축키를 직접 바꿨는지 확인하고, 제보 내용을 보여 준 뒤 "네"를 받으면 제보 접수 |
